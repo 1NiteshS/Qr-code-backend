@@ -10,14 +10,21 @@ export interface IInformation extends Document {
     phoneNo: string;
 }
 
-const InformationSchema: Schema = new Schema({
-    id: { type: String },
-    name: { type: String },
-    position : { type: String },
-    organization : { type: String },
-    country : { type: String },
-    email: { type: String},
-    phoneNo: { type: String },
-}, { timestamps: true });
+const InformationSchema: Schema = new Schema(
+    {
+        id: { 
+            type: String, 
+            required: true, 
+            unique: true,
+        },
+        name: { type: String, required: true },
+        position: { type: String, required: true },
+        organization: { type: String, required: true },
+        country: { type: String, required: true },
+        email: { type: String, required: true },
+        phoneNo: { type: String, required: true },
+    },
+    { timestamps: true } // Adds `createdAt` and `updatedAt`
+);
 
 export default mongoose.model<IInformation>('Information', InformationSchema);
