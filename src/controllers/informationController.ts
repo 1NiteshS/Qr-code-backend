@@ -53,37 +53,22 @@ export const getInformation = async (req: Request, res: Response) => {
         const limit = parseInt(req.query.limit as string) || 10; // Default to 10 items per page
         const skip = (page - 1) * limit; // Calculate the number of documents to skip
 
-        // Aggregation pipeline to ensure unique `id` and get the latest document per `id`
-        const data = await Information.aggregate([
-            { $sort: { createdAt: -1 } }, // Sort by createdAt in descending order (latest first)
-            {
-                $group: {
-                    _id: "$id", // Group by `id`
-                    name: { $first: "$name" },
-                    position: { $first: "$position" },
-                    organization: { $first: "$organization" },
-                    country: { $first: "$country" },
-                    email: { $first: "$email" },
-                    phoneNo: { $first: "$phoneNo" },
-                    createdAt: { $first: "$createdAt" }, // Get the latest `createdAt` for each unique `id`
-                },
-            },
-            { $skip: skip }, // Pagination: Skip documents based on the page
-            { $limit: limit }, // Pagination: Limit the number of documents per page
-        ]);
+        // Fetch paginated data
+        const data = await Information.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
 
-        // Fetch the total count of unique `id`s for pagination
-        const totalDocuments = await Information.aggregate([
-            { $group: { _id: "$id" } }, // Group by `id` to count unique `id`s
-        ]);
-        const totalPages = Math.ceil(totalDocuments.length / limit);
+        // Fetch the total count of documents for calculating total pages
+        const totalDocuments = await Information.countDocuments();
+        const totalPages = Math.ceil(totalDocuments / limit);
 
         // Respond with paginated data and metadata
         res.status(200).json({
             data,
             currentPage: page,
             totalPages,
-            totalDocuments: totalDocuments.length,
+            totalDocuments,
             hasNextPage: page < totalPages,
             hasPreviousPage: page > 1,
         });
